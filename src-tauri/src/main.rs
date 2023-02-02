@@ -65,7 +65,11 @@ fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
     for (i, old_file_path) in files_scraped.lines().enumerate() {
         let current_path = dir_path.join(format!("{i}.{out_ext}"));
         let new_path = old_file_path.replace(&format!(".{in_ext}"), &format!(".{out_ext}"));
-        fs::rename(current_path, new_path)?;
+        let new_path = Path::new(&new_path);
+        // allow deleting files in `to_convert` directory
+        if current_path.exists() && !new_path.exists() {
+            fs::rename(current_path, new_path)?;
+        }
     }
 
     Ok(())
