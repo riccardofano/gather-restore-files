@@ -5,48 +5,64 @@ import "./App.css";
 
 function App() {
   const [message, setMessage] = useState("");
-  const [restoreAvailable, setRestoreAvailable] = useState(false);
   const [inExt, setInExt] = useState("indd");
   const [outExt, setOutExt] = useState("idml");
   const [files, setFiles] = useState<string[]>([]);
+  const [selectedDirectory, setSelectedDirectory] = useState("");
+  const [error, setError] = useState<string>();
 
   async function selectDirectory() {
-    if (!inExt || !outExt) {
-      setMessage(
-        "You MUST set the input file extension and output file extension."
-      );
-      return;
-    }
-
     const selected = await open({ directory: true });
     if (!selected || Array.isArray(selected)) {
       return;
     }
 
-    console.log(selected);
+    setSelectedDirectory(selected);
+    setMessage("SELECTED: " + selected);
+  }
 
-    invoke("gather_files", { path: selected, inExt })
+  async function searchFiles() {
+    invoke("search_files", { path: selectedDirectory, inExt })
       .then((files) => {
-        setMessage("FILES COPIED TO desktop/to_convert");
-        setRestoreAvailable(true);
-
+        console.log(files);
+        setMessage("FILES FOUND:");
         if (Array.isArray(files)) {
           setFiles(files);
         }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setError(JSON.stringify(err));
+      });
+  }
+
+  async function gatherFiles() {
+    if (!selectedDirectory) {
+      setMessage("NO DIRECTORY SELECTED");
+      return;
+    }
+
+    invoke("gather_files", { files, inExt })
+      .then(() => {
+        setMessage("FILES COPIED TO desktop/to_convert");
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(JSON.stringify(err));
+      });
   }
 
   async function restoreFiles() {
     invoke("restore_files", { inExt, outExt })
       .then(() => setMessage("FILES RESTORED"))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setError(JSON.stringify(err));
+      });
   }
 
   return (
     <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
       <div className="input-grid">
         <label htmlFor="in">Input file extension</label>
         <input
@@ -65,10 +81,28 @@ function App() {
           onChange={(e) => setOutExt(e.target.value)}
         />
       </div>
-      <div>
-        <button onClick={selectDirectory}>Choose directory</button>
-        <button onClick={restoreFiles}>Restore files</button>
+      <div className="row">
+        {/* These disabled checks are dumb */}
+        <button disabled={!inExt || !outExt} onClick={selectDirectory}>
+          Choose directory
+        </button>
+        <button
+          disabled={!inExt || !outExt || !selectDirectory}
+          onClick={searchFiles}
+        >
+          Search files
+        </button>
+        <button
+          disabled={!inExt || !outExt || !selectedDirectory || !files}
+          onClick={gatherFiles}
+        >
+          Gather files
+        </button>
+        <button disabled={!inExt || !outExt} onClick={restoreFiles}>
+          Restore files
+        </button>
       </div>
+      {error && <p>ERROR: {error}</p>}
       <p>{message}</p>
 
       {files.length > 0 && (

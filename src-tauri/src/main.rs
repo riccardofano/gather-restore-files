@@ -14,21 +14,18 @@ use walkdir::WalkDir;
 static SCRAPED_FILE_NAME: &str = "scraped_file.txt";
 static TO_CONVERT_DIR: &str = "to_convert";
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-fn gather_files(path: &str, in_ext: &str) -> tauri::Result<Vec<String>> {
-    let files = WalkDir::new(path)
+fn search_files(path: &str, in_ext: &str) -> Vec<String> {
+    WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
         .map(|entry| entry.path().display().to_string())
         .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+}
 
+#[tauri::command]
+fn gather_files(files: Vec<String>, in_ext: &str) -> tauri::Result<()> {
     let base_path = tauri::api::path::desktop_dir().expect("$DESKTOP scope must be set");
     let scrape_file_path = Path::new(&base_path).join(SCRAPED_FILE_NAME);
     let dir_path = Path::new(&base_path).join(TO_CONVERT_DIR);
@@ -48,7 +45,7 @@ fn gather_files(path: &str, in_ext: &str) -> tauri::Result<Vec<String>> {
             .expect("Could not copy file: {file} to path {}");
     }
 
-    Ok(files)
+    Ok(())
 }
 
 #[tauri::command]
@@ -77,7 +74,11 @@ fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, gather_files, restore_files])
+        .invoke_handler(tauri::generate_handler![
+            search_files,
+            gather_files,
+            restore_files
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
