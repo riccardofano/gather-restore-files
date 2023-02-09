@@ -2,12 +2,18 @@ import { useState } from "react";
 import { open } from "@tauri-apps/api/dialog";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
+import { P } from "@tauri-apps/api/event-2a9960e7";
+
+interface SearchResults {
+  file_names: string[];
+  total_size: number;
+}
 
 function App() {
   const [message, setMessage] = useState("");
   const [inExt, setInExt] = useState("indd");
   const [outExt, setOutExt] = useState("idml");
-  const [files, setFiles] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResults>();
   const [selectedDirectory, setSelectedDirectory] = useState("");
   const [error, setError] = useState<string>();
 
@@ -23,12 +29,10 @@ function App() {
 
   async function searchFiles() {
     invoke("search_files", { path: selectedDirectory, inExt })
-      .then((files) => {
-        console.log(files);
+      .then((res) => {
+        console.log(res);
         setMessage("FILES FOUND:");
-        if (Array.isArray(files)) {
-          setFiles(files);
-        }
+        setSearchResults(res as SearchResults);
       })
       .catch((err) => {
         console.error(err);
@@ -42,7 +46,7 @@ function App() {
       return;
     }
 
-    invoke("gather_files", { files, inExt })
+    invoke("gather_files", { files: searchResults?.file_names, inExt })
       .then(() => {
         setMessage("FILES COPIED TO desktop/to_convert");
       })
@@ -82,32 +86,20 @@ function App() {
         />
       </div>
       <div className="row">
-        {/* These disabled checks are dumb */}
-        <button disabled={!inExt || !outExt} onClick={selectDirectory}>
-          Choose directory
-        </button>
-        <button
-          disabled={!inExt || !outExt || !selectDirectory}
-          onClick={searchFiles}
-        >
-          Search files
-        </button>
-        <button
-          disabled={!inExt || !outExt || !selectedDirectory || !files}
-          onClick={gatherFiles}
-        >
-          Gather files
-        </button>
-        <button disabled={!inExt || !outExt} onClick={restoreFiles}>
-          Restore files
-        </button>
+        <button onClick={selectDirectory}>Choose directory</button>
+        <button onClick={searchFiles}>Search files</button>
+        <button onClick={gatherFiles}>Gather files</button>
+        <button onClick={restoreFiles}>Restore files</button>
       </div>
       {error && <p>ERROR: {error}</p>}
       <p>{message}</p>
 
-      {files.length > 0 && (
+      {searchResults?.total_size && (
+        <p>{(searchResults.total_size / 1000_000_000).toFixed(2)} GB</p>
+      )}
+      {searchResults?.file_names && searchResults.file_names.length > 0 && (
         <ol className="file-list" start={0}>
-          {files.map((f, i) => (
+          {searchResults?.file_names.map((f, i) => (
             <li key={i}>{f}</li>
           ))}
         </ol>

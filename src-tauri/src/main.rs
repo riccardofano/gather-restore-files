@@ -6,22 +6,42 @@
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Write},
+    os::windows::prelude::MetadataExt,
     path::Path,
 };
 
+use serde::Serialize;
 use walkdir::WalkDir;
 
 static SCRAPED_FILE_NAME: &str = "scraped_file.txt";
 static TO_CONVERT_DIR: &str = "to_convert";
 
+#[derive(Debug, Serialize)]
+struct SearchInfo {
+    file_names: Vec<String>,
+    total_size: u64,
+}
+
 #[tauri::command]
-fn search_files(path: &str, in_ext: &str) -> Vec<String> {
-    WalkDir::new(path)
+fn search_files(path: &str, in_ext: &str) -> SearchInfo {
+    let mut sum = 0;
+    let files = WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
-        .map(|entry| entry.path().display().to_string())
+        .map(|entry| {
+            sum += match entry.metadata() {
+                Ok(file) => file.file_size(),
+                Err(_) => 0,
+            };
+            entry.path().display().to_string()
+        })
         .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    SearchInfo {
+        file_names: files,
+        total_size: sum,
+    }
 }
 
 #[tauri::command]
@@ -63,9 +83,11 @@ fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
         let current_path = dir_path.join(format!("{i}.{out_ext}"));
         let new_path = old_file_path.replace(&format!(".{in_ext}"), &format!(".{out_ext}"));
         let new_path = Path::new(&new_path);
+
         // allow deleting files in `to_convert` directory
         if current_path.exists() && !new_path.exists() {
-            fs::rename(current_path, new_path)?;
+            fs::copy(&current_path, new_path)?;
+            fs::remove_file(current_path)?;
         }
     }
 
