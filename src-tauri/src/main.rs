@@ -6,7 +6,6 @@
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Write},
-    os::windows::prelude::MetadataExt,
     path::Path,
 };
 
@@ -30,7 +29,7 @@ fn search_files(path: &str, in_ext: &str) -> SearchInfo {
         .filter_map(Result::ok)
         .map(|entry| {
             sum += match entry.metadata() {
-                Ok(file) => file.file_size(),
+                Ok(file) => file.len(),
                 Err(_) => 0,
             };
             entry.path().display().to_string()
