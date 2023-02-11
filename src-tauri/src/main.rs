@@ -79,14 +79,20 @@ fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
     scrape_file.read_to_string(&mut files_scraped)?;
 
     for (i, old_file_path) in files_scraped.lines().enumerate() {
-        let current_path = dir_path.join(format!("{i}.{out_ext}"));
+        let new_file = dir_path.join(format!("{i}.{out_ext}"));
+        let old_file = dir_path.join(format!("{i}.{in_ext}"));
+
         let new_path = old_file_path.replace(&format!(".{in_ext}"), &format!(".{out_ext}"));
         let new_path = Path::new(&new_path);
 
         // allow deleting files in `to_convert` directory
-        if current_path.exists() && !new_path.exists() {
-            fs::copy(&current_path, new_path)?;
-            fs::remove_file(current_path)?;
+        if new_file.exists() && !new_path.exists() {
+            fs::copy(&new_file, new_path)?;
+            fs::remove_file(new_file)?;
+
+            if old_file.exists() {
+                fs::remove_file(old_file)?;
+            }
         }
     }
 
