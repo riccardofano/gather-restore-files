@@ -5,11 +5,12 @@
 
 use std::{
     fs::{self, File, OpenOptions},
-    io::{Read, Write},
-    path::Path,
+    io::{BufRead, BufReader, Write},
+    path::{Path, PathBuf},
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use tauri::State;
 use walkdir::WalkDir;
 
 static SCRAPED_FILE_NAME: &str = "scraped_file.txt";
@@ -24,7 +25,7 @@ struct SearchInfo {
 #[tauri::command]
 fn search_files(path: &str, in_ext: &str) -> SearchInfo {
     let mut sum = 0;
-    let files = WalkDir::new(path)
+    let files: Vec<String> = WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
         .map(|entry| {
@@ -35,7 +36,7 @@ fn search_files(path: &str, in_ext: &str) -> SearchInfo {
             entry.path().display().to_string()
         })
         .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
-        .collect::<Vec<_>>();
+        .collect();
 
     SearchInfo {
         file_names: files,
@@ -44,10 +45,22 @@ fn search_files(path: &str, in_ext: &str) -> SearchInfo {
 }
 
 #[tauri::command]
-fn gather_files(files: Vec<String>, in_ext: &str) -> tauri::Result<()> {
-    let base_path = tauri::api::path::desktop_dir().expect("$DESKTOP scope must be set");
-    let scrape_file_path = Path::new(&base_path).join(SCRAPED_FILE_NAME);
-    let dir_path = Path::new(&base_path).join(TO_CONVERT_DIR);
+fn read_scrape_file(base_path: State<BasePath>) -> tauri::Result<Vec<String>> {
+    let path = Path::new(&base_path.0).join(SCRAPED_FILE_NAME);
+    let file = match File::open(&path) {
+        Ok(f) => f,
+        Err(_) => return Ok(Vec::new()),
+    };
+    let reader = BufReader::new(file);
+    let lines = reader.lines().collect::<Result<_, _>>()?;
+
+    Ok(lines)
+}
+
+#[tauri::command]
+fn gather_files(files: Vec<String>, in_ext: &str, base_path: State<BasePath>) -> tauri::Result<()> {
+    let scrape_file_path = Path::new(&base_path.0).join(SCRAPED_FILE_NAME);
+    let dir_path = Path::new(&base_path.0).join(TO_CONVERT_DIR);
 
     let mut save_file = OpenOptions::new()
         .write(true)
@@ -68,17 +81,11 @@ fn gather_files(files: Vec<String>, in_ext: &str) -> tauri::Result<()> {
 }
 
 #[tauri::command]
-fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
-    let base_path = tauri::api::path::desktop_dir().expect("$DESKTOP scope must be set");
+fn restore_files(in_ext: &str, out_ext: &str, base_path: State<BasePath>) -> tauri::Result<()> {
+    let dir_path = Path::new(&base_path.0).join(TO_CONVERT_DIR);
+    let files_scraped = read_scrape_file(base_path)?;
 
-    let scrape_file_path = Path::new(&base_path).join(SCRAPED_FILE_NAME);
-    let dir_path = Path::new(&base_path).join(TO_CONVERT_DIR);
-
-    let mut scrape_file = File::open(&scrape_file_path)?;
-    let mut files_scraped = String::new();
-    scrape_file.read_to_string(&mut files_scraped)?;
-
-    for (i, old_file_path) in files_scraped.lines().enumerate() {
+    for (i, old_file_path) in files_scraped.iter().enumerate() {
         let new_file = dir_path.join(format!("{i}.{out_ext}"));
         let old_file = dir_path.join(format!("{i}.{in_ext}"));
 
@@ -99,11 +106,18 @@ fn restore_files(in_ext: &str, out_ext: &str) -> tauri::Result<()> {
     Ok(())
 }
 
+#[derive(Serialize, Deserialize)]
+struct BasePath(PathBuf);
+
 fn main() {
+    let base_path = tauri::api::path::desktop_dir().expect("$DESKTOP scope must be set");
+
     tauri::Builder::default()
+        .manage(BasePath(base_path))
         .invoke_handler(tauri::generate_handler![
             search_files,
             gather_files,
+            read_scrape_file,
             restore_files
         ])
         .run(tauri::generate_context!())

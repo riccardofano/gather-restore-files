@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/api/dialog";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
-import { P } from "@tauri-apps/api/event-2a9960e7";
 
 interface SearchResults {
   file_names: string[];
@@ -13,9 +12,30 @@ function App() {
   const [message, setMessage] = useState("");
   const [inExt, setInExt] = useState("indd");
   const [outExt, setOutExt] = useState("idml");
-  const [searchResults, setSearchResults] = useState<SearchResults>();
+  const [searchResults, setSearchResults] = useState<SearchResults>({
+    file_names: [],
+    total_size: 0,
+  });
   const [selectedDirectory, setSelectedDirectory] = useState("");
   const [error, setError] = useState<string>();
+
+  function logError(err: unknown) {
+    setError(JSON.stringify(err));
+    console.log(error);
+  }
+
+  useEffect(() => {
+    function showSavedFiles(file_names: string[]) {
+      setSearchResults((previous) => ({ ...previous, file_names }));
+    }
+
+    invoke("read_scrape_file")
+      .then((file_names) => {
+        console.log(file_names);
+        showSavedFiles(file_names as string[]);
+      })
+      .catch(logError);
+  }, []);
 
   async function selectDirectory() {
     const selected = await open({ directory: true });
@@ -34,10 +54,7 @@ function App() {
         setMessage("FILES FOUND:");
         setSearchResults(res as SearchResults);
       })
-      .catch((err) => {
-        console.error(err);
-        setError(JSON.stringify(err));
-      });
+      .catch(logError);
   }
 
   async function gatherFiles() {
@@ -50,19 +67,13 @@ function App() {
       .then(() => {
         setMessage("FILES COPIED TO desktop/to_convert");
       })
-      .catch((err) => {
-        console.error(err);
-        setError(JSON.stringify(err));
-      });
+      .catch(logError);
   }
 
   async function restoreFiles() {
     invoke("restore_files", { inExt, outExt })
       .then(() => setMessage("FILES RESTORED"))
-      .catch((err) => {
-        console.error(err);
-        setError(JSON.stringify(err));
-      });
+      .catch(logError);
   }
 
   return (
@@ -94,12 +105,13 @@ function App() {
       {error && <p>ERROR: {error}</p>}
       <p>{message}</p>
 
-      {searchResults?.total_size && (
+      {searchResults.total_size > 0 && (
         <p>{(searchResults.total_size / 1000_000_000).toFixed(2)} GB</p>
       )}
-      {searchResults?.file_names && searchResults.file_names.length > 0 && (
+
+      {searchResults.file_names.length > 0 && (
         <ol className="file-list" start={0}>
-          {searchResults?.file_names.map((f, i) => (
+          {searchResults.file_names.map((f, i) => (
             <li key={i}>{f}</li>
           ))}
         </ol>
