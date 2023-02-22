@@ -43,14 +43,12 @@ function Convert() {
     }
 
     setSelectedDirectory(selected);
-    setMessage("SELECTED: " + selected);
   }
 
   async function searchFiles() {
     invoke("search_files", { path: selectedDirectory, inExt })
       .then((res) => {
         console.log(res);
-        setMessage("FILES FOUND:");
         setSearchResults(res as SearchResults);
       })
       .catch(logError);
@@ -76,28 +74,38 @@ function Convert() {
   }
 
   return (
-    <div className="container">
-      <div className="input-grid">
-        <label htmlFor="in">Input file extension</label>
+    <>
+      <label>
+        Input file extension
         <input
-          id="in"
-          name="in"
           type="text"
           value={inExt}
           onChange={(e) => setInExt(e.target.value)}
         />
-        <label htmlFor="out">Output file extension</label>
+      </label>
+      <label>
+        Output file extension
         <input
-          id="out"
-          name="out"
           type="text"
           value={outExt}
           onChange={(e) => setOutExt(e.target.value)}
         />
-      </div>
-      <div className="row">
-        <button onClick={selectDirectory}>Choose directory</button>
-        <button onClick={searchFiles}>Search files</button>
+      </label>
+
+      <label>
+        Input directory
+        <div className="flex items-center gap-4">
+          <p className="inputlike">
+            {selectedDirectory || "No directory selected"}
+          </p>
+          <button onClick={selectDirectory} className="btn">
+            Select
+          </button>
+        </div>
+      </label>
+
+      <div className="mt-8 flex gap-4 mx-auto">
+        <button onClick={searchFiles}>List files</button>
         <button onClick={gatherFiles}>Gather files</button>
         <button onClick={restoreFiles}>Restore files</button>
       </div>
@@ -105,17 +113,20 @@ function Convert() {
       <p>{message}</p>
 
       {searchResults.total_size > 0 && (
-        <p>{(searchResults.total_size / 1000_000_000).toFixed(2)} GB</p>
+        <p>
+          Total files size:{" "}
+          {(searchResults.total_size / 1000_000_000).toFixed(2)} GB
+        </p>
       )}
 
       {searchResults.file_names.length > 0 && (
-        <ol className="file-list" start={0}>
+        <ol className="list-decimal" start={0}>
           {searchResults.file_names.map((f, i) => (
             <li key={i}>{f}</li>
           ))}
         </ol>
       )}
-    </div>
+    </>
   );
 }
 

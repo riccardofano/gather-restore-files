@@ -1,10 +1,6 @@
-*,
-*::before,
-*::after {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -22,123 +18,6 @@
   -webkit-text-size-adjust: 100%;
 }
 
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-input:hover,
-button:hover {
-  border-color: #396cd8;
-}
-
-button + button {
-  margin-left: 1rem;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-.input-grid {
-  display: grid;
-  grid-template-columns: 10rem 1fr;
-  align-items: center;
-  row-gap: 1rem;
-  margin: 2rem auto;
-}
-
-.input-grid label {
-  display: flex;
-}
-
-.file-list {
-  text-align: left;
-}
-
-nav {
-  background-color: hsla(0, 0%, 0%, 50%);
-  padding: 0 2rem;
-}
-
-nav ul {
-  display: flex;
-  gap: 2rem;
-  padding: 0;
-}
-
-nav li {
-  list-style-type: none;
-}
-
-nav a {
-  display: inline-block;
-  padding: 1rem 0;
-  color: inherit;
-}
-
-.underline {
-  border-bottom: 4px solid #24c8db;
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
@@ -150,8 +29,26 @@ nav a {
   }
 
   input,
-  button {
+  .inputlike {
     color: #ffffff;
     background-color: #0f0f0f98;
+  }
+
+  button,
+  .btn {
+    color: #ffffff;
+    @apply bg-amber-700;
+  }
+}
+
+@layer components {
+  input,
+  .inputlike {
+    @apply w-full block px-4 py-2 rounded-md bg-white;
+  }
+
+  button,
+  .btn {
+    @apply px-4 py-2 rounded-md bg-white;
   }
 }

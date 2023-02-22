@@ -48,24 +48,41 @@ function Move() {
   }
 
   return (
-    <div className="container">
-      <div className="input-grid">
-        <label htmlFor="ext">Input file extension</label>
+    <>
+      <label>
+        Input file extension
         <input
-          id="ext"
-          name="ext"
           type="text"
           value={ext}
           onChange={(e) => setExt(e.target.value)}
         />
-      </div>
-      <div className="row">
-        <button onClick={() => selectDirectory(setInputDirectory)}>
-          Choose input directory
-        </button>
-        <button onClick={() => selectDirectory(setOutputDirectory)}>
-          Choose output directory
-        </button>
+      </label>
+
+      <label>
+        Input directory
+        <div className="flex items-center gap-4">
+          <p className="inputlike">
+            {inputDirectory || "No directory selected"}
+          </p>
+          <button onClick={() => selectDirectory(setInputDirectory)}>
+            Select
+          </button>
+        </div>
+      </label>
+
+      <label>
+        Output directory
+        <div className="flex items-center gap-4">
+          <p className="inputlike">
+            {outputDirectory || "No directory selected"}
+          </p>
+          <button onClick={() => selectDirectory(setOutputDirectory)}>
+            Select
+          </button>
+        </div>
+      </label>
+
+      <div className="mt-8 flex gap-4 mx-auto">
         <button onClick={searchFiles}>List files</button>
         <button onClick={moveFiles}>Move files</button>
       </div>
@@ -83,7 +100,7 @@ function Move() {
           ))}
         </ol>
       )}
-    </div>
+    </>
   );
 }
 
