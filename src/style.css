@@ -1,3 +1,11 @@
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -104,6 +112,31 @@ button {
 
 .file-list {
   text-align: left;
+}
+
+nav {
+  background-color: hsla(0, 0%, 0%, 50%);
+  padding: 0 2rem;
+}
+
+nav ul {
+  display: flex;
+  gap: 2rem;
+  padding: 0;
+}
+
+nav li {
+  list-style-type: none;
+}
+
+nav a {
+  display: inline-block;
+  padding: 1rem 0;
+  color: inherit;
+}
+
+.underline {
+  border-bottom: 4px solid #24c8db;
 }
 
 @media (prefers-color-scheme: dark) {
