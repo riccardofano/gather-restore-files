@@ -13,12 +13,12 @@ function Move() {
   const [inputDirectory, setInputDirectory] = useState("");
   const [outputDirectory, setOutputDirectory] = useState("");
 
-  const [message, setMessage] = useState("");
   const [error, setError] = useState<string>();
+  const [message, setMessage] = useState<string>();
 
   function logError(err: unknown) {
     setError(JSON.stringify(err));
-    console.log(error);
+    console.error(error);
   }
 
   async function selectDirectory(
@@ -30,14 +30,11 @@ function Move() {
     }
 
     setFunction(selected);
-    setMessage("SELECTED: " + selected);
   }
 
   async function searchFiles() {
     invoke("search_files", { path: inputDirectory, inExt: ext })
       .then((res) => {
-        console.log(res);
-        setMessage("FILES FOUND:");
         setSearchResults(res as SearchResults);
       })
       .catch(logError);
@@ -48,7 +45,9 @@ function Move() {
       ext,
       inputDirectory,
       outputDirectory,
-    });
+    })
+      .then(() => setMessage("FILES MOVED"))
+      .catch(logError);
   }
 
   return (
@@ -94,7 +93,10 @@ function Move() {
       <p>{message}</p>
 
       {searchResults.total_size > 0 && (
-        <p>{(searchResults.total_size / 1000_000_000).toFixed(2)} GB</p>
+        <p>
+          Total files size:{" "}
+          {(searchResults.total_size / 1000_000_000).toFixed(2)} GB
+        </p>
       )}
 
       {searchResults.file_names.length > 0 && (

@@ -20,7 +20,7 @@ function Convert() {
 
   function logError(err: unknown) {
     setError(JSON.stringify(err));
-    console.log(error);
+    console.error(error);
   }
 
   useEffect(() => {
@@ -48,7 +48,6 @@ function Convert() {
   async function searchFiles() {
     invoke("search_files", { path: selectedDirectory, inExt })
       .then((res) => {
-        console.log(res);
         setSearchResults(res as SearchResults);
       })
       .catch(logError);
