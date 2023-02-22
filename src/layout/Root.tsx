@@ -6,7 +6,7 @@ const navLinkActiveClass = " border-amber-700 border-b-4";
 function Root() {
   return (
     <>
-      <nav className="bg-black/20 px-2">
+      <nav className="bg-black/20 px-4">
         <ul className="flex gap-8">
           <li>
             <NavLink

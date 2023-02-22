@@ -34,7 +34,7 @@ function Move() {
   }
 
   async function searchFiles() {
-    invoke("search_files", { path: inputDirectory, ext })
+    invoke("search_files", { path: inputDirectory, inExt: ext })
       .then((res) => {
         console.log(res);
         setMessage("FILES FOUND:");
@@ -44,7 +44,11 @@ function Move() {
   }
 
   async function moveFiles() {
-    invoke("move_files", { path: inputDirectory, outPath: outputDirectory });
+    invoke("move_files", {
+      ext,
+      inputDirectory,
+      outputDirectory,
+    });
   }
 
   return (

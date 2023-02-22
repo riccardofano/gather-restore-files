@@ -33,12 +33,7 @@ fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
                 Ok(file) => file.len(),
                 Err(_) => 0,
             };
-            entry
-                .path()
-                .strip_prefix(path)
-                .expect("to have the path to the folder used for the search as its root")
-                .display()
-                .to_string()
+            entry.path().display().to_string()
         })
         .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
         .collect();
@@ -111,8 +106,55 @@ fn restore_files(in_ext: &str, out_ext: &str, base_path: State<BasePath>) -> tau
     Ok(())
 }
 
+#[derive(Debug, thiserror::Error)]
+enum MoveError {
+    #[error("failed to strip input directory from path")]
+    StripPrefixError(#[from] std::path::StripPrefixError),
+    #[error("Input and Output directory should not be the same")]
+    SameDirectoryError,
+    #[error(transparent)]
+    CreateDirError(#[from] std::io::Error),
+    #[error(transparent)]
+    TauriError(#[from] tauri::Error),
+}
+
+impl serde::Serialize for MoveError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
+}
+
 #[tauri::command]
-fn move_files(ext: &str, input_directory: &str, output_directory: &str) -> tauri::Result<()> {
+fn move_files(ext: &str, input_directory: &str, output_directory: &str) -> Result<(), MoveError> {
+    if input_directory == output_directory {
+        return Err(MoveError::SameDirectoryError);
+    }
+
+    let files = search_files(input_directory, ext)?;
+
+    for file in files.file_names.iter() {
+        let stripped_path = Path::new(file).strip_prefix(input_directory)?;
+        let new_path = Path::new(output_directory).join(stripped_path);
+
+        if new_path.exists() {
+            continue;
+        }
+
+        // Doing .ancestors() without first doing .parent() gives you the file
+        // too, not just the dirs
+        if let Some(parent) = new_path.parent() {
+            if let Some(ancestors) = parent.ancestors().next() {
+                dbg!(&ancestors);
+                fs::create_dir_all(ancestors)?;
+                fs::copy(file, new_path)?;
+                fs::remove_file(file)?;
+            }
+        }
+    }
+
     Ok(())
 }
 
