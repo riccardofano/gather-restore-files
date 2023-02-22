@@ -23,7 +23,7 @@ struct SearchInfo {
 }
 
 #[tauri::command]
-fn search_files(path: &str, in_ext: &str) -> SearchInfo {
+fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
     let mut sum = 0;
     let files: Vec<String> = WalkDir::new(path)
         .into_iter()
@@ -33,15 +33,20 @@ fn search_files(path: &str, in_ext: &str) -> SearchInfo {
                 Ok(file) => file.len(),
                 Err(_) => 0,
             };
-            entry.path().display().to_string()
+            entry
+                .path()
+                .strip_prefix(path)
+                .expect("to have the path to the folder used for the search as its root")
+                .display()
+                .to_string()
         })
         .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
         .collect();
 
-    SearchInfo {
+    Ok(SearchInfo {
         file_names: files,
         total_size: sum,
-    }
+    })
 }
 
 #[tauri::command]
@@ -106,6 +111,11 @@ fn restore_files(in_ext: &str, out_ext: &str, base_path: State<BasePath>) -> tau
     Ok(())
 }
 
+#[tauri::command]
+fn move_files(ext: &str, input_directory: &str, output_directory: &str) -> tauri::Result<()> {
+    Ok(())
+}
+
 #[derive(Serialize, Deserialize)]
 struct BasePath(PathBuf);
 
@@ -118,7 +128,8 @@ fn main() {
             search_files,
             gather_files,
             read_scrape_file,
-            restore_files
+            restore_files,
+            move_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

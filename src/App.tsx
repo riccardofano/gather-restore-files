@@ -3,6 +3,7 @@ import Root from "./layout/Root";
 
 import "./App.css";
 import Convert from "./pages/Convert";
+import Move from "./pages/Move";
 
 const router = createBrowserRouter([
   {
@@ -10,6 +11,7 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { path: "/", element: <Convert /> },
+      { path: "move", element: <Move /> },
     ],
   },
 ]);
