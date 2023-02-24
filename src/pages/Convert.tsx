@@ -93,7 +93,7 @@ function Convert() {
 
       <label>
         Input directory
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-4">
           <p className="inputlike">
             {selectedDirectory || "No directory selected"}
           </p>
@@ -103,7 +103,7 @@ function Convert() {
         </div>
       </label>
 
-      <div className="mt-8 flex gap-4 mx-auto">
+      <div className="mt-8 flex space-x-4 mx-auto">
         <button onClick={searchFiles}>List files</button>
         <button onClick={gatherFiles}>Gather files</button>
         <button onClick={restoreFiles}>Restore files</button>

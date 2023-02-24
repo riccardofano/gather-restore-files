@@ -63,7 +63,7 @@ function Move() {
 
       <label>
         Input directory
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-4">
           <p className="inputlike">
             {inputDirectory || "No directory selected"}
           </p>
@@ -75,7 +75,7 @@ function Move() {
 
       <label>
         Output directory
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-4">
           <p className="inputlike">
             {outputDirectory || "No directory selected"}
           </p>
@@ -85,7 +85,7 @@ function Move() {
         </div>
       </label>
 
-      <div className="mt-8 flex gap-4 mx-auto">
+      <div className="mt-8 flex space-x-4 mx-auto">
         <button onClick={searchFiles}>List files</button>
         <button onClick={moveFiles}>Move files</button>
       </div>

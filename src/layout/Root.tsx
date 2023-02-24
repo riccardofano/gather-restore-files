@@ -7,7 +7,7 @@ function Root() {
   return (
     <>
       <nav className="bg-black/20 px-4">
-        <ul className="flex gap-8">
+        <ul className="flex space-x-8">
           <li>
             <NavLink
               to="/"
