@@ -24,23 +24,31 @@ struct SearchInfo {
 
 #[tauri::command]
 fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
-    let mut sum = 0;
-    let files: Vec<String> = WalkDir::new(path)
+    let paths: Vec<PathBuf> = WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
-        .map(|entry| {
-            sum += match entry.metadata() {
-                Ok(file) => file.len(),
-                Err(_) => 0,
-            };
-            entry.path().display().to_string()
+        .map(|entry| entry.path().to_owned())
+        .filter(|path| {
+            path.display()
+                .to_string()
+                .to_lowercase()
+                .ends_with(&format!(".{}", &in_ext))
         })
-        .filter(|p| p.to_lowercase().ends_with(&format!(".{}", &in_ext)))
         .collect();
 
+    let total_size = paths.iter().fold(0, |acc, entry| {
+        acc + match entry.metadata() {
+            Ok(file) => file.len(),
+            Err(_) => 0,
+        }
+    });
+
     Ok(SearchInfo {
-        file_names: files,
-        total_size: sum,
+        file_names: paths
+            .iter()
+            .map(|path| path.display().to_string())
+            .collect(),
+        total_size,
     })
 }
 
