@@ -92,14 +92,18 @@ fn restore_files(in_ext: &str, out_ext: &str, base_path: State<BasePath>) -> tau
         let new_path = old_file_path.replace(&format!(".{in_ext}"), &format!(".{out_ext}"));
         let new_path = Path::new(&new_path);
 
-        // allow deleting files in `to_convert` directory
-        if new_file.exists() && !new_path.exists() {
-            fs::copy(&new_file, new_path)?;
-            fs::remove_file(new_file)?;
+        // Always delete the file with the old extension from the convert folder
+        // Always delete the file with the new extension
+        // Only copy it if there's no file with the same path already there
+        if old_file.exists() {
+            fs::remove_file(old_file)?;
+        }
 
-            if old_file.exists() {
-                fs::remove_file(old_file)?;
+        if new_file.exists() {
+            if !new_path.exists() {
+                fs::copy(&new_file, new_path)?;
             }
+            fs::remove_file(new_file)?;
         }
     }
 

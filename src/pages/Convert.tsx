@@ -67,6 +67,7 @@ function Convert() {
   }
 
   async function restoreFiles() {
+    setMessage("RESTORING...");
     invoke("restore_files", { inExt, outExt })
       .then(() => setMessage("FILES RESTORED"))
       .catch(logError);
