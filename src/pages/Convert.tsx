@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/api/dialog";
 import { invoke } from "@tauri-apps/api/tauri";
+import FileList from "../components/FileList";
 
 export interface SearchResults {
   file_names: string[];
@@ -119,13 +120,7 @@ function Convert() {
         </p>
       )}
 
-      {searchResults.file_names.length > 0 && (
-        <ol className="list-decimal" start={0}>
-          {searchResults.file_names.map((f, i) => (
-            <li key={i}>{f}</li>
-          ))}
-        </ol>
-      )}
+      <FileList files={searchResults.file_names} />
     </>
   );
 }

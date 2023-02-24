@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/api/dialog";
 import { invoke } from "@tauri-apps/api";
 
 import { SearchResults } from "./Convert";
+import FileList from "../components/FileList";
 
 function Move() {
   const [ext, setExt] = useState("indd");
@@ -99,13 +100,7 @@ function Move() {
         </p>
       )}
 
-      {searchResults.file_names.length > 0 && (
-        <ol className="file-list" start={0}>
-          {searchResults.file_names.map((f, i) => (
-            <li key={i}>{f}</li>
-          ))}
-        </ol>
-      )}
+      <FileList files={searchResults.file_names} />
     </>
   );
 }
