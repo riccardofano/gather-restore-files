@@ -48,9 +48,11 @@ function Root() {
 
       <div
         id="progress-bar"
-        className="h-2 bg-green-600 transition-transform ease-in origin-left"
+        className={`${
+          progress > 0 ? "h-2" : "h-0"
+        } bg-green-600 transition-transform ease-in origin-left`}
         style={{
-          transform: `scaleY(${progress > 0 ? 1 : 0}) scaleX(${progress})`,
+          transform: `scaleX(${progress})`,
         }}
       />
 

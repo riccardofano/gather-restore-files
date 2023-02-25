@@ -25,7 +25,7 @@ struct SearchInfo {
     total_size: u64,
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
     let paths: Vec<PathBuf> = WalkDir::new(path)
         .into_iter()
@@ -55,7 +55,7 @@ fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
     })
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn read_scrape_file(base_path: State<BasePath>) -> tauri::Result<Vec<String>> {
     let path = Path::new(&base_path.0).join(SCRAPED_FILE_NAME);
     let file = match File::open(&path) {
@@ -68,7 +68,7 @@ fn read_scrape_file(base_path: State<BasePath>) -> tauri::Result<Vec<String>> {
     Ok(lines)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn gather_files(files: Vec<String>, in_ext: &str, base_path: State<BasePath>) -> tauri::Result<()> {
     let scrape_file_path = Path::new(&base_path.0).join(SCRAPED_FILE_NAME);
     let dir_path = Path::new(&base_path.0).join(TO_CONVERT_DIR);
@@ -91,7 +91,7 @@ fn gather_files(files: Vec<String>, in_ext: &str, base_path: State<BasePath>) ->
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn restore_files(
     in_ext: &str,
     out_ext: &str,
@@ -154,7 +154,7 @@ impl serde::Serialize for MoveError {
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn move_files(
     ext: &str,
     input_directory: &str,
