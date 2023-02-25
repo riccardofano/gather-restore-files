@@ -20,6 +20,16 @@ function Root() {
 
   return (
     <>
+      <div
+        id="progress-bar"
+        className={`${
+          progress > 0 ? "h-1" : "h-0"
+        } w-full absolute top-0 left-0 bg-green-600 transition-transform ease-in origin-left`}
+        style={{
+          transform: `scaleX(${progress})`,
+        }}
+      />
+
       <nav className="bg-black/20 px-4">
         <ul className="flex space-x-8">
           <li>
@@ -45,16 +55,6 @@ function Root() {
           </li>
         </ul>
       </nav>
-
-      <div
-        id="progress-bar"
-        className={`${
-          progress > 0 ? "h-2" : "h-0"
-        } bg-green-600 transition-transform ease-in origin-left`}
-        style={{
-          transform: `scaleX(${progress})`,
-        }}
-      />
 
       <main className="grid gap-y-4 mx-auto my-8 px-8">
         <Outlet />
