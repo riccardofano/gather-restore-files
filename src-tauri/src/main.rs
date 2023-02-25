@@ -4,7 +4,7 @@
 )]
 
 use std::{
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
 };
@@ -73,10 +73,7 @@ fn gather_files(files: Vec<String>, in_ext: &str, base_path: State<BasePath>) ->
     let scrape_file_path = Path::new(&base_path.0).join(SCRAPED_FILE_NAME);
     let dir_path = Path::new(&base_path.0).join(TO_CONVERT_DIR);
 
-    let mut save_file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(&scrape_file_path)?;
+    let mut save_file = File::create(&scrape_file_path)?;
     save_file.write_all(files.join("\n").as_bytes())?;
 
     if !dir_path.exists() {
@@ -115,18 +112,19 @@ fn restore_files(
         let new_path = old_file_path.replace(&format!(".{in_ext}"), &format!(".{out_ext}"));
         let new_path = Path::new(&new_path);
 
-        // Always delete the file with the old extension from the convert folder
         // Always delete the file with the new extension
-        // Only copy it if there's no file with the same path already there
-        if old_file.exists() {
-            fs::remove_file(old_file)?;
-        }
-
         if new_file.exists() {
+            // Only copy it if there's no file with the same path already there
             if !new_path.exists() {
                 fs::copy(&new_file, new_path)?;
             }
-            fs::remove_file(new_file)?;
+
+            fs::remove_file(&new_file)?;
+
+            // Only remove the old file if it has been converted
+            if old_file.exists() {
+                fs::remove_file(old_file)?;
+            }
         }
     }
 
