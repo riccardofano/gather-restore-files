@@ -10,11 +10,14 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{State, Window};
 use walkdir::WalkDir;
 
 static SCRAPED_FILE_NAME: &str = "scraped_file.txt";
 static TO_CONVERT_DIR: &str = "to_convert";
+
+#[derive(Debug, Clone, Serialize)]
+struct ProgressPayload(f32);
 
 #[derive(Debug, Serialize)]
 struct SearchInfo {
@@ -89,11 +92,23 @@ fn gather_files(files: Vec<String>, in_ext: &str, base_path: State<BasePath>) ->
 }
 
 #[tauri::command]
-fn restore_files(in_ext: &str, out_ext: &str, base_path: State<BasePath>) -> tauri::Result<()> {
+fn restore_files(
+    in_ext: &str,
+    out_ext: &str,
+    base_path: State<BasePath>,
+    window: Window,
+) -> tauri::Result<()> {
     let dir_path = Path::new(&base_path.0).join(TO_CONVERT_DIR);
     let files_scraped = read_scrape_file(base_path)?;
 
+    let total_length = files_scraped.iter().len();
+
     for (i, old_file_path) in files_scraped.iter().enumerate() {
+        window.emit(
+            "PROGRESS",
+            ProgressPayload((i + 1) as f32 / total_length as f32),
+        )?;
+
         let new_file = dir_path.join(format!("{i}.{out_ext}"));
         let old_file = dir_path.join(format!("{i}.{in_ext}"));
 
@@ -140,14 +155,25 @@ impl serde::Serialize for MoveError {
 }
 
 #[tauri::command]
-fn move_files(ext: &str, input_directory: &str, output_directory: &str) -> Result<(), MoveError> {
+fn move_files(
+    ext: &str,
+    input_directory: &str,
+    output_directory: &str,
+    window: Window,
+) -> Result<(), MoveError> {
     if input_directory == output_directory {
         return Err(MoveError::SameDirectoryError);
     }
 
     let files = search_files(input_directory, ext)?;
+    let total_length = files.file_names.len();
 
-    for file in files.file_names.iter() {
+    for (i, file) in files.file_names.iter().enumerate() {
+        window.emit(
+            "PROGRESS",
+            ProgressPayload((i + 1) as f32 / total_length as f32),
+        )?;
+
         let stripped_path = Path::new(file).strip_prefix(input_directory)?;
         let new_path = Path::new(output_directory).join(stripped_path);
 

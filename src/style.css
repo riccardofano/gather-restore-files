@@ -33,12 +33,6 @@
     color: #ffffff;
     background-color: #0f0f0f98;
   }
-
-  button,
-  .btn {
-    color: #ffffff;
-    @apply bg-amber-700;
-  }
 }
 
 @layer components {
@@ -49,6 +43,6 @@
 
   button,
   .btn {
-    @apply px-4 py-2 rounded-md bg-white border-2 border-amber-700;
+    @apply px-4 py-2 rounded-md bg-amber-700 text-white;
   }
 }
