@@ -4,11 +4,13 @@
 )]
 
 use std::{
+    ffi::OsStr,
     fs::{self, File},
     io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
 };
 
+use file_format::FileFormat;
 use serde::{Deserialize, Serialize};
 use tauri::{State, Window};
 use walkdir::WalkDir;
@@ -26,18 +28,28 @@ struct SearchInfo {
 }
 
 #[tauri::command(async)]
-fn search_files(path: &str, in_ext: &str) -> tauri::Result<SearchInfo> {
-    let paths: Vec<PathBuf> = WalkDir::new(path)
+fn search_files(path: &str, in_ext: &str, indd: bool) -> tauri::Result<SearchInfo> {
+    let paths = WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
-        .map(|entry| entry.path().to_owned())
-        .filter(|path| {
-            path.display()
-                .to_string()
-                .to_lowercase()
-                .ends_with(&format!(".{}", &in_ext))
-        })
-        .collect();
+        .map(|entry| entry.path().to_owned());
+
+    let paths: Vec<PathBuf> = if indd {
+        // To find INDD files mistakenly saved without the proper extension
+        paths
+            .filter(|path| match FileFormat::from_file(path) {
+                Ok(format) => {
+                    format == FileFormat::AdobeIndesignDocument
+                        && path.extension() != Some(OsStr::new("indd"))
+                }
+                Err(_) => false,
+            })
+            .collect()
+    } else {
+        paths
+            .filter(|path| path.extension() == Some(OsStr::new(in_ext)))
+            .collect()
+    };
 
     let total_size = paths.iter().fold(0, |acc, entry| {
         acc + match entry.metadata() {
@@ -163,7 +175,7 @@ fn move_files(
         return Err(MoveError::SameDirectoryError);
     }
 
-    let files = search_files(input_directory, ext)?;
+    let files = search_files(input_directory, ext, false)?;
     let total_length = files.file_names.len();
 
     for (i, file) in files.file_names.iter().enumerate() {

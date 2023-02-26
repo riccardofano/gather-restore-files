@@ -46,8 +46,8 @@ function Convert() {
     setSelectedDirectory(selected);
   }
 
-  async function searchFiles() {
-    invoke("search_files", { path: selectedDirectory, inExt })
+  async function searchFiles(indd: boolean) {
+    invoke("search_files", { path: selectedDirectory, inExt, indd })
       .then((res) => {
         setSearchResults(res as SearchResults);
       })
@@ -106,7 +106,10 @@ function Convert() {
       </label>
 
       <div className="mt-8 flex space-x-4 mx-auto">
-        <button onClick={searchFiles}>List files</button>
+        <button onClick={() => searchFiles(false)}>List files</button>
+        <button onClick={() => searchFiles(true)}>
+          Find indesign files without extension
+        </button>
         <button onClick={gatherFiles}>Gather files</button>
         <button onClick={restoreFiles}>Restore files</button>
       </div>

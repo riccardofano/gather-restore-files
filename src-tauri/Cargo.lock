@@ -582,6 +582,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "file-format"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d645737d3dda11cbf14905e9b943a1bd578cdcb751709b581a924ea9b9b18b5c"
+
+[[package]]
 name = "filetime"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -719,6 +725,7 @@ dependencies = [
 name = "gather-restore-files"
 version = "0.2.1"
 dependencies = [
+ "file-format",
  "once_cell",
  "serde",
  "serde_json",
