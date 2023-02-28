@@ -34,7 +34,7 @@ function Move() {
   }
 
   async function searchFiles() {
-    invoke("search_files", { path: inputDirectory, inExt: ext })
+    invoke("search_files", { path: inputDirectory, inExt: ext, indd: false })
       .then((res) => {
         setSearchResults(res as SearchResults);
       })
